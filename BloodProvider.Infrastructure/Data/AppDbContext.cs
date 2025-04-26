@@ -1,23 +1,27 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using BloodProvider.Core.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using BloodProvider.Core.Entities;
 
 namespace BloodProvider.Infrastructure.Data
 {
     public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
+        // Add this DbSet
+        public DbSet<BloodRequest> BloodRequests { get; set; }
+
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options) { }
-
-        public DbSet<BloodRequest> BloodRequests { get; set; }
-        public DbSet<Donation> Donations { get; set; }
-        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<ApplicationUser>()
-                .HasIndex(u => u.BloodType);
+
+            // Configure BloodRequest relationship
+            builder.Entity<BloodRequest>()
+                .HasOne(r => r.Hospital)
+                .WithMany()
+                .HasForeignKey(r => r.HospitalId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

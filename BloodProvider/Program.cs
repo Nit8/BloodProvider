@@ -1,79 +1,61 @@
-using BloodProvider.Data;
 using BloodProvider.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using BloodProvider.Core.Entities;
+using BloodProvider.Core.Interfaces;
+using BloodProvider.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace BloodProvider
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
-    public class Program
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireNonAlphanumeric = false;
+})
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>();
+
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
+
+// Register services
+builder.Services.AddScoped<IDonorService, DonorMatchingService>();
+
+var app = builder.Build();
+
+// Seed initial data
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
 
-            // Add services to the container.
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
-            // Add services
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-            {
-                options.SignIn.RequireConfirmedAccount = false;
-                options.Password.RequireNonAlphanumeric = false;
-            })
-                .AddRoles<IdentityRole>()
-                .AddEntityFrameworkStores<AppDbContext>();
-
-            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-            //builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-            //    .AddEntityFrameworkStores<ApplicationDbContext>();
-            //builder.Services.AddControllersWithViews();
-
-            builder.Services.AddSignalR();
-            builder.Services.AddScoped<IDonorService, DonorMatchingService>();
-            builder.Services.AddScoped<INotificationService, NotificationService>();
-
-            var app = builder.Build();
-            // Seed admin user
-            using (var scope = app.Services.CreateScope())
-            {
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-                await SeedData.Initialize(userManager, roleManager);
-            }
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseMigrationsEndPoint();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
-            }
-
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
-
-            app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
-                name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");
-            app.MapRazorPages();
-            app.MapHub<NotificationHub>("/notificationHub");
-
-            app.Run();
-        }
+        await SeedData.Initialize(userManager, roleManager);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred seeding the DB.");
     }
 }
+
+// Configure middleware pipeline
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
+
+app.Run();
