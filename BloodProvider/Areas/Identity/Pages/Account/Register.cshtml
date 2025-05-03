@@ -4,94 +4,366 @@
     ViewData["Title"] = "Register";
 }
 
-<h1>@ViewData["Title"]</h1>
+<style>
+    .registration-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
 
-<div class="row">
-    <div class="col-md-4">
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h2>Create a new account.</h2>
-            <hr />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label asp-for="Input.Email">Email</label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.Password">Password</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Input.FullName"></label>
-                <input asp-for="Input.FullName" class="form-control" />
-                <span asp-validation-for="Input.FullName" class="text-danger"></span>
-                <div class="form-group">
-                    <label asp-for="Input.BloodType"></label>
-                    <select asp-for="Input.BloodType" class="form-control">
-                        <option value="">Select Blood Type</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                    </select>
-                    <span asp-validation-for="Input.BloodType" class="text-danger"></span>
-                </div>
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
 
-                <div class="form-check">
-                    <input asp-for="Input.IsDonor" class="form-check-input" />
-                    <label asp-for="Input.IsDonor" class="form-check-label"></label>
-                </div>
+    .card-header {
+        background: #dc3545;
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+        padding: 1.5rem;
+        text-align: center;
+    }
 
-                <div class="form-check">
-                    <input asp-for="Input.IsHospital" class="form-check-input" />
-                    <label asp-for="Input.IsHospital" class="form-check-label"></label>
-                </div>
-            </div>
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
-        </form>
-    </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to register.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
+    .form-control {
+        border-radius: 8px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25);
+        border-color: #dc3545;
+    }
+
+    .password-requirements {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .requirement-item {
+        display: flex;
+        align-items: center;
+        margin: 0.5rem 0;
+        transition: all 0.3s ease;
+    }
+
+    .requirement-item.valid {
+        color: #28a745;
+    }
+
+    .requirement-item.invalid {
+        color: #dc3545;
+    }
+
+    .validation-icon {
+        margin-right: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .blood-type-select {
+        position: relative;
+    }
+
+    .blood-type-select:after {
+        content: "▼";
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        pointer-events: none;
+    }
+
+    .btn-register {
+        background: #dc3545;
+        border: none;
+        padding: 1rem;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    }
+</style>
+
+<div class="registration-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">Create Your BloodLink Account</h2>
+                        <p class="mb-0">Join our lifesaving community in just a few steps</p>
                     </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-                }
-            }
-        </section>
+                    <div class="card-body p-4">
+                        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                            <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+
+                            <!-- Email -->
+                            <div class="mb-4">
+                                <label asp-for="Input.Email" class="form-label fw-bold">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input asp-for="Input.Email" class="form-control"
+                                           autocomplete="username" aria-required="true"
+                                           placeholder="Enter your email address" />
+                                </div>
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="mb-4">
+                                <label asp-for="Input.Password" class="form-label fw-bold">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input asp-for="Input.Password" class="form-control"
+                                           autocomplete="new-password" aria-required="true"
+                                           placeholder="Create a password"
+                                           onkeyup="validatePassword(this.value)" />
+                                </div>
+                                <div class="password-requirements mt-2">
+                                    <div class="requirement-item" id="length">
+                                        <span class="validation-icon">❌</span>
+                                        At least 8 characters
+                                    </div>
+                                    <div class="requirement-item" id="uppercase">
+                                        <span class="validation-icon">❌</span>
+                                        At least one uppercase letter
+                                    </div>
+                                    <div class="requirement-item" id="lowercase">
+                                        <span class="validation-icon">❌</span>
+                                        At least one lowercase letter
+                                    </div>
+                                    <div class="requirement-item" id="number">
+                                        <span class="validation-icon">❌</span>
+                                        At least one number
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="mb-4">
+                                <label asp-for="Input.ConfirmPassword" class="form-label fw-bold">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                    <input asp-for="Input.ConfirmPassword" class="form-control"
+                                           autocomplete="new-password" aria-required="true"
+                                           placeholder="Confirm your password"
+                                           onkeyup="validateConfirmPassword(this.value)" />
+                                </div>
+                                <span id="confirmPasswordFeedback" class="text-danger"></span>
+                            </div>
+
+                            <!-- Full Name -->
+                            <div class="mb-4">
+                                <label asp-for="Input.FullName" class="form-label fw-bold">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                    <input asp-for="Input.FullName" class="form-control"
+                                           placeholder="Enter your full name"
+                                           onkeyup="validateFullName(this.value)" />
+                                </div>
+                                <span id="fullNameFeedback" class="text-danger"></span>
+                            </div>
+
+                            <!-- Blood Type -->
+                            <div class="mb-4 blood-type-select">
+                                <label asp-for="Input.BloodType" class="form-label fw-bold">Blood Type</label>
+                                <select asp-for="Input.BloodType" class="form-select"
+                                        onchange="validateBloodType(this.value)">
+                                    <option value="">Select Your Blood Type</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                                <span id="bloodTypeFeedback" class="text-danger"></span>
+                            </div>
+
+                            <!-- Donor/Hospital Selection -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input asp-for="Input.IsDonor" class="form-check-input"
+                                               onchange="validateRoleSelection()" />
+                                        <label asp-for="Input.IsDonor" class="form-check-label fw-bold">
+                                            <i class="fas fa-hand-holding-heart"></i> I'm a Donor
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input asp-for="Input.IsHospital" class="form-check-input"
+                                               onchange="validateRoleSelection()" />
+                                        <label asp-for="Input.IsHospital" class="form-check-label fw-bold">
+                                            <i class="fas fa-hospital"></i> I'm a Hospital
+                                        </label>
+                                    </div>
+                                </div>
+                                <span id="roleFeedback" class="text-danger"></span>
+                            </div>
+
+                            <button id="registerSubmit" type="submit"
+                                    class="w-100 btn btn-register btn-lg text-white">
+                                Create Account <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Enhanced validation functions with proper error reporting
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /\d/.test(password)
+            };
+
+            let isValid = true;
+            Object.keys(requirements).forEach(key => {
+                const element = document.getElementById(key);
+                element.classList.toggle('valid', requirements[key]);
+                element.classList.toggle('invalid', !requirements[key]);
+                element.querySelector('.validation-icon').textContent =
+                    requirements[key] ? '✔️' : '❌';
+
+                if (!requirements[key]) isValid = false;
+            });
+
+            return isValid;
+        }
+
+        function validateConfirmPassword(confirmPassword) {
+            const password = document.getElementById('Input_Password').value;
+            const feedback = document.getElementById('confirmPasswordFeedback');
+
+            if (confirmPassword !== password) {
+                feedback.textContent = '⛔ Passwords do not match!';
+                return false;
+            }
+            feedback.textContent = '';
+            return true;
+        }
+
+        function validateFullName(fullName) {
+            const feedback = document.getElementById('fullNameFeedback');
+
+            if (fullName.trim().length < 2) {
+                feedback.textContent = '⛔ Please enter a valid full name (min 2 characters)';
+                return false;
+            }
+            feedback.textContent = '';
+            return true;
+        }
+
+        function validateBloodType(bloodType) {
+            const feedback = document.getElementById('bloodTypeFeedback');
+
+            if (!bloodType) {
+                feedback.textContent = '⛔ Please select your blood type';
+                return false;
+            }
+            feedback.textContent = '';
+            return true;
+        }
+
+        function validateRoleSelection() {
+            const feedback = document.getElementById('roleFeedback');
+            const isDonor = document.getElementById('Input_IsDonor').checked;
+            const isHospital = document.getElementById('Input_IsHospital').checked;
+
+            if (!isDonor && !isHospital) {
+                feedback.textContent = '⛔ Please select at least one role (Donor or Hospital)';
+                return false;
+            }
+            feedback.textContent = '';
+            return true;
+        }
+
+        // Enhanced form submission handler
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const password = document.getElementById('Input_Password').value;
+            const confirmPassword = document.getElementById('Input_ConfirmPassword').value;
+            const fullName = document.getElementById('Input_FullName').value;
+            const bloodType = document.getElementById('Input_BloodType').value;
+
+            // Force validation of all fields
+            const validations = [
+                validatePassword(password),
+                validateConfirmPassword(confirmPassword),
+                validateFullName(fullName),
+                validateBloodType(bloodType),
+                validateRoleSelection()
+            ];
+
+            // Check if all validations passed
+            const isValid = validations.every(valid => valid === true);
+
+            if (!isValid) {
+                e.preventDefault();
+
+                // Show error messages near relevant fields
+                if (!validatePassword(password)) {
+                    document.getElementById('length').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                else if (!validateConfirmPassword(confirmPassword)) {
+                    document.getElementById('Input_ConfirmPassword').scrollIntoView({ behavior: 'smooth' });
+                }
+                else if (!validateFullName(fullName)) {
+                    document.getElementById('Input_FullName').scrollIntoView({ behavior: 'smooth' });
+                }
+                else if (!validateBloodType(bloodType)) {
+                    document.getElementById('Input_BloodType').scrollIntoView({ behavior: 'smooth' });
+                }
+                else if (!validateRoleSelection()) {
+                    document.getElementById('Input_IsDonor').scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        });
+
+        // Real-time validation triggers
+        document.getElementById('Input_Password').addEventListener('input', function() {
+            validatePassword(this.value);
+        });
+
+        document.getElementById('Input_ConfirmPassword').addEventListener('input', function() {
+            validateConfirmPassword(this.value);
+        });
+
+        document.getElementById('Input_FullName').addEventListener('input', function() {
+            validateFullName(this.value);
+        });
+
+        document.getElementById('Input_BloodType').addEventListener('change', function() {
+            validateBloodType(this.value);
+        });
+
+        // Initial validation check
+        document.querySelectorAll('.form-control, .form-check-input').forEach(element => {
+            element.addEventListener('input', function() {
+                validatePassword(document.getElementById('Input_Password').value);
+                validateConfirmPassword(document.getElementById('Input_ConfirmPassword').value);
+                validateFullName(document.getElementById('Input_FullName').value);
+                validateBloodType(document.getElementById('Input_BloodType').value);
+                validateRoleSelection();
+            });
+        });
+    </script>
 }
