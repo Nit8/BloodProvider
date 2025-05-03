@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace BloodProvider.Infrastructure.Data.Migrations
+namespace BloodProvider.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,7 +32,6 @@ namespace BloodProvider.Infrastructure.Data.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BloodType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsDonor = table.Column<bool>(type: "bit", nullable: false),
                     IsHospital = table.Column<bool>(type: "bit", nullable: false),
                     Latitude = table.Column<double>(type: "float", nullable: false),

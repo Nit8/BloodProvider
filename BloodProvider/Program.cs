@@ -19,6 +19,10 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
 
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+});
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();

@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace BloodProvider.Infrastructure.Data.Migrations
+namespace BloodProvider.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate2 : Migration
+    public partial class MakeFullNameRequired : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

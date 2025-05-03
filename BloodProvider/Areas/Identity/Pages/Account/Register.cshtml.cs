@@ -26,8 +26,6 @@ namespace BloodProvider.Web.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserStore<ApplicationUser> _userStore;
-        private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
 
@@ -39,8 +37,6 @@ namespace BloodProvider.Web.Areas.Identity.Pages.Account
             IEmailSender emailSender)
         {
             _userManager = userManager;
-            _userStore = userStore;
-            _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
@@ -125,21 +121,25 @@ namespace BloodProvider.Web.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            if (Input.IsDonor && Input.IsHospital)
+            {
+                ModelState.AddModelError(string.Empty, "Cannot be both donor and hospital.");
+                return Page();
+            }
+
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser
-                {
-                    UserName = Input.Email,
-                    Email = Input.Email,
-                    FullName = Input.FullName,
-                    BloodType = Input.BloodType,
-                    IsDonor = Input.IsDonor,
-                    IsHospital = Input.IsHospital
-                };
+                var user = CreateUser();
+                user.Email = Input.Email;
+                user.UserName = Input.Email;
+                user.FullName = Input.FullName.Trim();
+                user.BloodType = Input.BloodType;
+                user.IsDonor = Input.IsDonor;
+                user.IsHospital = Input.IsHospital;
 
 
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                //await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                //await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
@@ -192,13 +192,5 @@ namespace BloodProvider.Web.Areas.Identity.Pages.Account
             }
         }
 
-        private IUserEmailStore<ApplicationUser> GetEmailStore()
-        {
-            if (!_userManager.SupportsUserEmail)
-            {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
-            }
-            return (IUserEmailStore<ApplicationUser>)_userStore;
-        }
     }
 }
